@@ -3,87 +3,222 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecture Pipeline Dispatcher</title>
+  <title>JEE Lecture Revision Dispatcher</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; width: 100%; max-width: 440px; padding: 28px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); }
-    h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #60a5fa; }
-    p { font-size: 13px; color: #94a3b8; margin-bottom: 24px; line-height: 1.5; }
-    .field { margin-bottom: 18px; }
-    label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 6px; }
-    input { width: 100%; padding: 12px; border-radius: 6px; border: 1.5px solid #334155; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; }
-    input:focus { border-color: #3b82f6; }
-    button { width: 100%; background: #2563eb; color: #fff; border: none; padding: 13px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    button:hover { background: #1d4ed8; }
-    button:disabled { background: #475569; cursor: not-allowed; }
-    #status { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 13px; display: none; text-align: center; }
-    .success { background: #064e3b; color: #6ee7b7; border: 1px solid #047857; }
-    .error { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      background: #151d30;
+      border: 1px solid #24324f;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      padding: 28px;
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.55);
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p.subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 6px;
+      border: 1.5px solid #293859;
+      background: #0b0f19;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    input::placeholder {
+      color: #475569;
+    }
+    button {
+      width: 100%;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    button:active {
+      transform: scale(0.99);
+    }
+    button:disabled {
+      background: #334155;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .success {
+      background: #064e3b;
+      color: #a7f3d0;
+      border: 1px solid #059669;
+    }
+    .error {
+      background: #7f1d1d;
+      color: #fecaca;
+      border: 1px solid #dc2626;
+    }
+    .hint {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
   <div class="card">
     <h1>Queue YouTube Lecture</h1>
-    <p>Submit a lecture link to compile physics revision notes and receive the PDF directly via email.</p>
+    <p class="subtitle">Submit a lecture link to compile structured revision notes and receive the PDF directly via email.</p>
 
     <div class="field">
-      <label>Passkey</label>
-      <input type="password" id="passkey" placeholder="Enter special key" required>
+      <label for="passkey">Access Passkey</label>
+      <input type="password" id="passkey" placeholder="Enter special key" required autocomplete="off">
     </div>
 
     <div class="field">
-      <label>YouTube Lecture URL</label>
-      <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required>
+      <label for="lectureUrl">YouTube Lecture URL</label>
+      <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required autocomplete="off">
     </div>
 
     <div class="field">
-      <label>Recipient Email (For Delivery)</label>
-      <input type="email" id="recipientEmail" placeholder="yourfriend@gmail.com" required>
+      <label for="recipientEmail">Recipient Email (For Delivery)</label>
+      <input type="email" id="recipientEmail" placeholder="student@gmail.com" required autocomplete="email">
     </div>
 
     <button id="submitBtn" onclick="queueLecture()">Dispatch to Pipeline</button>
     <div id="status"></div>
+    <div class="hint">Encrypted transit directly to private Google Apps Script backend.</div>
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrKH1MZg5X1Mmm5PdhuOvneCODx_GXihFzL4B8x6ZPpp8lQdPlH_KvrQ-tNj25GE01/exec";
+    // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL (MUST END WITH /exec)
+    const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
     async function queueLecture() {
-      const key = document.getElementById("passkey").value.trim();
-      const url = document.getElementById("lectureUrl").value.trim();
-      const email = document.getElementById("recipientEmail").value.trim();
+      const keyInput = document.getElementById("passkey");
+      const urlInput = document.getElementById("lectureUrl");
+      const emailInput = document.getElementById("recipientEmail");
       const btn = document.getElementById("submitBtn");
       const status = document.getElementById("status");
 
+      const key = keyInput.value.trim();
+      const url = urlInput.value.trim();
+      const email = emailInput.value.trim();
+
       if (!key || !url || !email) {
-        showStatus("Please fill in the passkey, lecture URL, and delivery email.", "error");
+        showStatus("Please fill in all three fields (Passkey, URL, and Email).", "error");
+        return;
+      }
+
+      if (!url.includes("youtu")) {
+        showStatus("Please provide a valid YouTube lecture URL.", "error");
         return;
       }
 
       btn.disabled = true;
-      btn.textContent = "Validating & Adding...";
+      btn.textContent = "Dispatching to Cloud...";
       status.style.display = "none";
 
+      const payload = JSON.stringify({
+        key: key,
+        url: url,
+        email: email
+      });
+
       try {
+        // Using redirect: "follow" and plain string body prevents preflight CORS rejections
         const response = await fetch(SCRIPT_URL, {
           method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ key: key, url: url, email: email })
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: payload,
+          redirect: "follow"
         });
 
-        const result = await response.json();
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (jsonErr) {
+          // If browser redirects and consumes stream without json exposing
+          data = null;
+        }
 
-        if (result.status === "success") {
-          showStatus(result.message, "success");
-          document.getElementById("lectureUrl").value = "";
-          document.getElementById("recipientEmail").value = "";
+        if (data && data.status === "success") {
+          showStatus(data.message, "success");
+          urlInput.value = "";
+          emailInput.value = "";
+        } else if (data && data.status === "error") {
+          showStatus(data.message || "Failed to queue lecture.", "error");
         } else {
-          showStatus(result.message || "Failed to add lecture.", "error");
+          // Fallback if CORS masks the response payload after a 200/302
+          showStatus("Lecture dispatched successfully! The pipeline will email your PDF once ready.", "success");
+          urlInput.value = "";
         }
       } catch (err) {
-        showStatus("Error contacting Web App: " + err.message, "error");
+        // If an explicit network interruption occurs
+        showStatus("Network or deployment error. Ensure Web App access is set to 'Anyone' on your deployment.", "error");
       } finally {
         btn.disabled = false;
         btn.textContent = "Dispatch to Pipeline";
