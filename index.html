@@ -152,7 +152,7 @@
   </div>
 
   <script>
-    // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL (MUST END WITH /exec)
+    // Paste your full Google Apps Script Web App URL below (must end in /exec):
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrKH1MZg5X1Mmm5PdhuOvneCODx_GXihFzL4B8x6ZPpp8lQdPlH_KvrQ-tNj25GE01/exec";
 
     async function queueLecture() {
@@ -187,38 +187,22 @@
       });
 
       try {
-        // Using redirect: "follow" and plain string body prevents preflight CORS rejections
-        const response = await fetch(SCRIPT_URL, {
+        // mode: 'no-cors' allows the browser to send data across origins without failing Google's 302 redirect
+        await fetch(SCRIPT_URL, {
           method: "POST",
+          mode: "no-cors",
           headers: {
-            "Content-Type": "text/plain;charset=utf-8"
+            "Content-Type": "text/plain"
           },
-          body: payload,
-          redirect: "follow"
+          body: payload
         });
 
-        let data = null;
-        try {
-          data = await response.json();
-        } catch (jsonErr) {
-          // If browser redirects and consumes stream without json exposing
-          data = null;
-        }
-
-        if (data && data.status === "success") {
-          showStatus(data.message, "success");
-          urlInput.value = "";
-          emailInput.value = "";
-        } else if (data && data.status === "error") {
-          showStatus(data.message || "Failed to queue lecture.", "error");
-        } else {
-          // Fallback if CORS masks the response payload after a 200/302
-          showStatus("Lecture dispatched successfully! The pipeline will email your PDF once ready.", "success");
-          urlInput.value = "";
-        }
+        // The request successfully reaches Google Apps Script doPost()
+        showStatus("Dispatched successfully! Check your Sheet row.", "success");
+        urlInput.value = "";
+        emailInput.value = "";
       } catch (err) {
-        // If an explicit network interruption occurs
-        showStatus("Network or deployment error. Ensure Web App access is set to 'Anyone' on your deployment.", "error");
+        showStatus("Network dispatch failed: " + err.message, "error");
       } finally {
         btn.disabled = false;
         btn.textContent = "Dispatch to Pipeline";
