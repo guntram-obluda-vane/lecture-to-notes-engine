@@ -26,7 +26,7 @@
 
   <div class="card">
     <h1>Queue YouTube Lecture</h1>
-    <p>Submit a lecture link to add it directly to the automated notes compilation spreadsheet.</p>
+    <p>Submit a lecture link to compile physics revision notes and receive the PDF directly via email.</p>
 
     <div class="field">
       <label>Passkey</label>
@@ -38,22 +38,27 @@
       <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required>
     </div>
 
-    <button id="submitBtn" onclick="queueLecture()">Dispatch to Spreadsheet</button>
+    <div class="field">
+      <label>Recipient Email (For Delivery)</label>
+      <input type="email" id="recipientEmail" placeholder="yourfriend@gmail.com" required>
+    </div>
+
+    <button id="submitBtn" onclick="queueLecture()">Dispatch to Pipeline</button>
     <div id="status"></div>
   </div>
 
   <script>
-    // Paste your Google Apps Script Web App Deployment URL here:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrKH1MZg5X1Mmm5PdhuOvneCODx_GXihFzL4B8x6ZPpp8lQdPlH_KvrQ-tNj25GE01/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
     async function queueLecture() {
       const key = document.getElementById("passkey").value.trim();
       const url = document.getElementById("lectureUrl").value.trim();
+      const email = document.getElementById("recipientEmail").value.trim();
       const btn = document.getElementById("submitBtn");
       const status = document.getElementById("status");
 
-      if (!key || !url) {
-        showStatus("Please provide both passkey and lecture link.", "error");
+      if (!key || !url || !email) {
+        showStatus("Please fill in the passkey, lecture URL, and delivery email.", "error");
         return;
       }
 
@@ -65,7 +70,7 @@
         const response = await fetch(SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ key: key, url: url })
+          body: JSON.stringify({ key: key, url: url, email: email })
         });
 
         const result = await response.json();
@@ -73,6 +78,7 @@
         if (result.status === "success") {
           showStatus(result.message, "success");
           document.getElementById("lectureUrl").value = "";
+          document.getElementById("recipientEmail").value = "";
         } else {
           showStatus(result.message || "Failed to add lecture.", "error");
         }
@@ -80,7 +86,7 @@
         showStatus("Error contacting Web App: " + err.message, "error");
       } finally {
         btn.disabled = false;
-        btn.textContent = "Dispatch to Spreadsheet";
+        btn.textContent = "Dispatch to Pipeline";
       }
     }
 
