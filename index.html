@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JEE Lecture Revision Dispatcher</title>
+  <title>JEE Lecture Notes Generator</title>
   <style>
     * {
       box-sizing: border-box;
@@ -105,8 +105,32 @@
       color: #ffffff !important;
       border-color: #3b82f6 !important;
     }
+    #confirmBox {
+      display: none;
+      background: #0b0f19;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    #confirmBox strong {
+      color: #60a5fa;
+    }
+    #confirmBox .detail-line {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
     button#submitBtn {
-      width: 100%;
+      flex: 1;
       background: #2563eb;
       color: #ffffff;
       border: none;
@@ -115,11 +139,16 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 6px;
       transition: background-color 0.2s ease, transform 0.1s ease;
     }
     button#submitBtn:hover {
       background: #1d4ed8;
+    }
+    button#submitBtn.confirm-mode {
+      background: #059669;
+    }
+    button#submitBtn.confirm-mode:hover {
+      background: #047857;
     }
     button#submitBtn:active {
       transform: scale(0.99);
@@ -128,6 +157,22 @@
       background: #334155;
       color: #94a3b8;
       cursor: not-allowed;
+    }
+    button#cancelBtn {
+      display: none;
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    button#cancelBtn:hover {
+      background: #334155;
+      color: #ffffff;
     }
     #status {
       margin-top: 16px;
@@ -159,34 +204,44 @@
 <body>
 
   <div class="card">
-    <h1>Queue YouTube Lecture</h1>
-    <p class="subtitle">Submit a lecture link to compile structured revision notes and receive the PDF directly via email.</p>
+    <h1>Generate Lecture Notes</h1>
+    <p class="subtitle">Paste a YouTube lecture link below to generate detailed PDF revision notes and have them sent straight to your inbox.</p>
 
     <div class="field">
       <label for="passkey">Access Passkey</label>
       <div class="password-wrapper">
-        <input type="password" id="passkey" placeholder="Enter special key" required autocomplete="off">
+        <input type="password" id="passkey" placeholder="Enter your access passkey" required autocomplete="off">
         <button type="button" id="togglePwdBtn" class="toggle-pwd">Show</button>
       </div>
     </div>
 
     <div class="field">
-      <label for="lectureUrl">YouTube Lecture URL</label>
+      <label for="lectureUrl">YouTube Lecture Link</label>
       <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required autocomplete="off">
     </div>
 
     <div class="field">
-      <label for="recipientEmail">Recipient Email (For Delivery)</label>
-      <input type="email" id="recipientEmail" placeholder="student@gmail.com" required autocomplete="email">
+      <label for="recipientEmail">Your Email Address</label>
+      <input type="email" id="recipientEmail" placeholder="you@gmail.com" required autocomplete="email">
     </div>
 
-    <button id="submitBtn" onclick="queueLecture()">Dispatch to Pipeline</button>
+    <div id="confirmBox">
+      <div class="detail-line"><strong>Send PDF to:</strong> <span id="confirmEmail"></span></div>
+      <div class="detail-line"><strong>Lecture:</strong> <span id="confirmUrl"></span></div>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" id="cancelBtn" onclick="resetConfirmation()">Cancel</button>
+      <button type="button" id="submitBtn" onclick="handleSubmitClick()">Generate Notes</button>
+    </div>
+
     <div id="status"></div>
-    <div class="hint">Encrypted transit directly to private Google Apps Script backend.</div>
+    <div class="hint">Your PDF notes will arrive in your inbox within a few minutes.</div>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrKH1MZg5X1Mmm5PdhuOvneCODx_GXihFzL4B8x6ZPpp8lQdPlH_KvrQ-tNj25GE01/exec";
+    let isConfirming = false;
 
     const passkeyInput = document.getElementById("passkey");
     const togglePwdBtn = document.getElementById("togglePwdBtn");
@@ -197,11 +252,31 @@
       togglePwdBtn.textContent = isHidden ? "Hide" : "Show";
     });
 
-    async function queueLecture() {
+    ["passkey", "lectureUrl", "recipientEmail"].forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        if (isConfirming) resetConfirmation();
+      });
+    });
+
+    function resetConfirmation() {
+      isConfirming = false;
+      const btn = document.getElementById("submitBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const confirmBox = document.getElementById("confirmBox");
+
+      btn.textContent = "Generate Notes";
+      btn.classList.remove("confirm-mode");
+      cancelBtn.style.display = "none";
+      confirmBox.style.display = "none";
+    }
+
+    async function handleSubmitClick() {
       const keyInput = document.getElementById("passkey");
       const urlInput = document.getElementById("lectureUrl");
       const emailInput = document.getElementById("recipientEmail");
       const btn = document.getElementById("submitBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const confirmBox = document.getElementById("confirmBox");
       const status = document.getElementById("status");
 
       const key = keyInput.value.trim();
@@ -209,17 +284,30 @@
       const email = emailInput.value.trim();
 
       if (!key || !url || !email) {
-        showStatus("Please fill in all three fields (Passkey, URL, and Email).", "error");
+        showStatus("Please fill in your passkey, lecture link, and email address.", "error");
         return;
       }
 
       if (!url.includes("youtu")) {
-        showStatus("Please provide a valid YouTube lecture URL.", "error");
+        showStatus("Please enter a valid YouTube lecture link.", "error");
+        return;
+      }
+
+      if (!isConfirming) {
+        isConfirming = true;
+        status.style.display = "none";
+        document.getElementById("confirmEmail").textContent = email;
+        document.getElementById("confirmUrl").textContent = url;
+        confirmBox.style.display = "block";
+        cancelBtn.style.display = "block";
+        btn.textContent = "Confirm & Submit";
+        btn.classList.add("confirm-mode");
         return;
       }
 
       btn.disabled = true;
-      btn.textContent = "Dispatching to Cloud...";
+      cancelBtn.disabled = true;
+      btn.textContent = "Submitting...";
       status.style.display = "none";
 
       const payload = JSON.stringify({
@@ -229,23 +317,34 @@
       });
 
       try {
-        await fetch(SCRIPT_URL, {
+        const response = await fetch(SCRIPT_URL, {
           method: "POST",
-          mode: "no-cors",
           headers: {
-            "Content-Type": "text/plain"
+            "Content-Type": "text/plain;charset=utf-8"
           },
           body: payload
         });
 
-        showStatus("Dispatched successfully! Check your Sheet row.", "success");
-        urlInput.value = "";
-        emailInput.value = "";
+        const result = await response.json();
+
+        if (result.status === "success") {
+          showStatus("Got it! Your notes are being prepared and you'll receive the PDF in your mail in a bit.", "success");
+          urlInput.value = "";
+          emailInput.value = "";
+          resetConfirmation();
+        } else {
+          showStatus(result.message || "Incorrect access passkey. Please try again.", "error");
+          resetConfirmation();
+        }
       } catch (err) {
-        showStatus("Network dispatch failed: " + err.message, "error");
+        showStatus("Could not reach the server. Please check your connection and try again.", "error");
+        resetConfirmation();
       } finally {
         btn.disabled = false;
-        btn.textContent = "Dispatch to Pipeline";
+        cancelBtn.disabled = false;
+        if (!isConfirming) {
+          btn.textContent = "Generate Notes";
+        }
       }
     }
 
