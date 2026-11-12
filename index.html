@@ -29,14 +29,16 @@
       padding: 28px;
       box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.55);
     }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
     h1 {
       font-size: 20px;
       font-weight: 700;
-      margin-bottom: 6px;
       color: #60a5fa;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     p.subtitle {
       font-size: 13px;
@@ -46,12 +48,6 @@
     }
     .field {
       margin-bottom: 16px;
-      transition: opacity 0.25s ease;
-    }
-    .locked-section {
-      opacity: 0.4;
-      pointer-events: none;
-      user-select: none;
     }
     label {
       display: block;
@@ -62,14 +58,9 @@
       color: #cbd5e1;
       margin-bottom: 6px;
     }
-    .passkey-row {
-      display: flex;
-      gap: 8px;
-      align-items: stretch;
-    }
     .password-wrapper {
       position: relative;
-      flex: 1;
+      width: 100%;
     }
     input {
       width: 100%;
@@ -88,12 +79,6 @@
     input:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    input:disabled {
-      background: #090d16;
-      border-color: #1e293b;
-      color: #64748b;
-      cursor: not-allowed;
     }
     input::placeholder {
       color: #475569;
@@ -122,29 +107,50 @@
       color: #ffffff !important;
       border-color: #3b82f6 !important;
     }
-    button#unlockBtn {
+    button.primary-btn {
+      width: 100%;
       background: #2563eb;
       color: #ffffff;
       border: none;
-      padding: 0 16px;
+      padding: 12px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.2s ease;
+      margin-top: 4px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
-    button#unlockBtn:hover {
+    button.primary-btn:hover:not(:disabled) {
       background: #1d4ed8;
     }
-    button#unlockBtn.unlocked {
+    button.primary-btn.confirm-mode {
       background: #059669;
-      cursor: default;
     }
-    button#unlockBtn:disabled {
+    button.primary-btn.confirm-mode:hover:not(:disabled) {
+      background: #047857;
+    }
+    button.primary-btn:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+    button.primary-btn:disabled {
       background: #334155;
       color: #94a3b8;
       cursor: not-allowed;
+    }
+    button.lock-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    button.lock-btn:hover {
+      color: #ffffff;
+      border-color: #64748b;
     }
     #confirmBox {
       display: none;
@@ -152,10 +158,15 @@
       border: 1px solid #334155;
       border-radius: 6px;
       padding: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       font-size: 12px;
       color: #cbd5e1;
       line-height: 1.5;
+    }
+    #confirmBox .confirm-prompt {
+      color: #fbbf24;
+      font-weight: 600;
+      margin-bottom: 6px;
     }
     #confirmBox strong {
       color: #60a5fa;
@@ -168,36 +179,11 @@
     .btn-group {
       display: flex;
       gap: 8px;
-      margin-top: 6px;
+      margin-top: 4px;
     }
-    button#submitBtn {
+    .btn-group button.primary-btn {
       flex: 1;
-      background: #2563eb;
-      color: #ffffff;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-    button#submitBtn:hover:not(:disabled) {
-      background: #1d4ed8;
-    }
-    button#submitBtn.confirm-mode {
-      background: #059669;
-    }
-    button#submitBtn.confirm-mode:hover:not(:disabled) {
-      background: #047857;
-    }
-    button#submitBtn:active:not(:disabled) {
-      transform: scale(0.99);
-    }
-    button#submitBtn:disabled {
-      background: #334155;
-      color: #94a3b8;
-      cursor: not-allowed;
+      margin-top: 0;
     }
     button#cancelBtn {
       display: none;
@@ -215,7 +201,7 @@
       background: #334155;
       color: #ffffff;
     }
-    #status {
+    .status-box {
       margin-top: 16px;
       padding: 12px;
       border-radius: 6px;
@@ -240,127 +226,108 @@
       color: #64748b;
       text-align: center;
     }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h1>Generate Lecture Notes</h1>
-    <p class="subtitle">Enter your access passkey to unlock the form, then paste a YouTube lecture link to receive PDF notes in your inbox.</p>
+  <!-- SCREEN 1: PASSKEY GATE -->
+  <div id="screen1" class="card">
+    <div class="header-row">
+      <h1>Access Verification</h1>
+    </div>
+    <p class="subtitle">Please enter your access passkey to continue to the lecture notes generator.</p>
 
     <div class="field">
-      <label for="passkey">Step 1: Access Passkey</label>
-      <div class="passkey-row">
-        <div class="password-wrapper">
-          <input type="password" id="passkey" placeholder="Enter passkey to unlock" required autocomplete="off">
-          <button type="button" id="togglePwdBtn" class="toggle-pwd">Show</button>
-        </div>
-        <button type="button" id="unlockBtn" onclick="verifyPasskey()">Unlock</button>
+      <label for="passkey">Access Passkey</label>
+      <div class="password-wrapper">
+        <input type="password" id="passkey" placeholder="Enter your access passkey" required autocomplete="off" autofocus>
+        <button type="button" id="togglePwdBtn" class="toggle-pwd">Show</button>
       </div>
     </div>
 
-    <div id="lockedForm" class="locked-section">
-      <div class="field">
-        <label for="lectureUrl">Step 2: YouTube Lecture Link</label>
-        <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required autocomplete="off" disabled>
-      </div>
+    <button type="button" id="unlockBtn" class="primary-btn" onclick="verifyAndProceed()">Continue</button>
+    <div id="status1" class="status-box"></div>
+  </div>
 
-      <div class="field">
-        <label for="recipientEmail">Step 3: Your Email Address</label>
-        <input type="email" id="recipientEmail" placeholder="you@gmail.com" required autocomplete="email" disabled>
-      </div>
+  <!-- SCREEN 2: LECTURE & EMAIL FORM -->
+  <div id="screen2" class="card hidden">
+    <div class="header-row">
+      <h1>Generate Lecture Notes</h1>
+      <button type="button" class="lock-btn" onclick="goBackToScreen1()">Lock</button>
+    </div>
+    <p class="subtitle">Paste a YouTube lecture link and your email below. You'll receive the compiled PDF notes in your inbox in a bit.</p>
 
-      <div id="confirmBox">
-        <div class="detail-line"><strong>Send PDF to:</strong> <span id="confirmEmail"></span></div>
-        <div class="detail-line"><strong>Lecture:</strong> <span id="confirmUrl"></span></div>
-      </div>
-
-      <div class="btn-group">
-        <button type="button" id="cancelBtn" onclick="resetConfirmation()">Cancel</button>
-        <button type="button" id="submitBtn" onclick="handleSubmitClick()" disabled>Generate Notes</button>
-      </div>
+    <div class="field">
+      <label for="lectureUrl">YouTube Lecture Link</label>
+      <input type="url" id="lectureUrl" placeholder="https://www.youtube.com/watch?v=..." required autocomplete="off">
     </div>
 
-    <div id="status"></div>
-    <div class="hint">Your PDF notes will arrive in your inbox within a few minutes.</div>
+    <div class="field">
+      <label for="recipientEmail">Your Email Address (Gmail)</label>
+      <input type="email" id="recipientEmail" placeholder="you@gmail.com" required autocomplete="email">
+    </div>
+
+    <div id="confirmBox">
+      <div class="confirm-prompt">Are you sure you want to submit these details?</div>
+      <div class="detail-line"><strong>Send PDF to:</strong> <span id="confirmEmail"></span></div>
+      <div class="detail-line"><strong>Lecture:</strong> <span id="confirmUrl"></span></div>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" id="cancelBtn" onclick="resetConfirmation()">Cancel</button>
+      <button type="button" id="submitBtn" class="primary-btn" onclick="handleSubmitClick()">Generate Notes</button>
+    </div>
+
+    <div id="status2" class="status-box"></div>
+    <div class="hint">Your PDF notes will arrive in your mail within a few minutes.</div>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwrKH1MZg5X1Mmm5PdhuOvneCODx_GXihFzL4B8x6ZPpp8lQdPlH_KvrQ-tNj25GE01/exec";
-    let isUnlocked = false;
+    let verifiedPasskey = "";
     let isConfirming = false;
 
     const passkeyInput = document.getElementById("passkey");
     const togglePwdBtn = document.getElementById("togglePwdBtn");
 
+    // Show/Hide password toggle
     togglePwdBtn.addEventListener("click", () => {
       const isHidden = passkeyInput.type === "password";
       passkeyInput.type = isHidden ? "text" : "password";
       togglePwdBtn.textContent = isHidden ? "Hide" : "Show";
     });
 
-    // Allow pressing Enter inside passkey box to unlock
+    // Submit Screen 1 on Enter key
     passkeyInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !isUnlocked) {
+      if (e.key === "Enter") {
         e.preventDefault();
-        verifyPasskey();
+        verifyAndProceed();
       }
     });
 
-    // Re-lock immediately if user modifies the passkey after unlocking
-    passkeyInput.addEventListener("input", () => {
-      if (isUnlocked) {
-        setLockState(false);
-        resetConfirmation();
-      }
-    });
-
+    // Reset confirmation state if inputs change on Screen 2
     ["lectureUrl", "recipientEmail"].forEach(id => {
       document.getElementById(id).addEventListener("input", () => {
         if (isConfirming) resetConfirmation();
       });
     });
 
-    function setLockState(unlocked) {
-      isUnlocked = unlocked;
-      const lockedForm = document.getElementById("lockedForm");
-      const urlInput = document.getElementById("lectureUrl");
-      const emailInput = document.getElementById("recipientEmail");
-      const submitBtn = document.getElementById("submitBtn");
-      const unlockBtn = document.getElementById("unlockBtn");
-
-      if (unlocked) {
-        lockedForm.classList.remove("locked-section");
-        urlInput.disabled = false;
-        emailInput.disabled = false;
-        submitBtn.disabled = false;
-        unlockBtn.textContent = "Unlocked ✓";
-        unlockBtn.classList.add("unlocked");
-      } else {
-        lockedForm.classList.add("locked-section");
-        urlInput.disabled = true;
-        emailInput.disabled = true;
-        submitBtn.disabled = true;
-        unlockBtn.textContent = "Unlock";
-        unlockBtn.classList.remove("unlocked");
-      }
-    }
-
-    async function verifyPasskey() {
-      if (isUnlocked) return;
-
+    async function verifyAndProceed() {
       const key = passkeyInput.value.trim();
       const unlockBtn = document.getElementById("unlockBtn");
-      const status = document.getElementById("status");
+      const status1 = document.getElementById("status1");
 
       if (!key) {
-        showStatus("Please enter your access passkey first.", "error");
+        showStatus("status1", "Please enter your access passkey.", "error");
         return;
       }
 
       unlockBtn.disabled = true;
-      unlockBtn.textContent = "Checking...";
-      status.style.display = "none";
+      unlockBtn.textContent = "Verifying...";
+      status1.style.display = "none";
 
       try {
         const response = await fetch(SCRIPT_URL, {
@@ -379,22 +346,32 @@
         const result = JSON.parse(rawText);
 
         if (result.status === "success") {
-          setLockState(true);
-          status.style.display = "none";
+          verifiedPasskey = key;
+          document.getElementById("screen1").classList.add("hidden");
+          document.getElementById("screen2").classList.remove("hidden");
           document.getElementById("lectureUrl").focus();
         } else {
-          setLockState(false);
-          showStatus(result.message || "Incorrect access passkey. Form remains locked.", "error");
+          showStatus("status1", result.message || "Incorrect access passkey. Please try again.", "error");
         }
       } catch (err) {
-        setLockState(false);
-        showStatus("Could not verify passkey. Please check your connection.", "error");
+        showStatus("status1", "Could not verify passkey. Please check your connection.", "error");
       } finally {
         unlockBtn.disabled = false;
-        if (!isUnlocked) {
-          unlockBtn.textContent = "Unlock";
-        }
+        unlockBtn.textContent = "Continue";
       }
+    }
+
+    function goBackToScreen1() {
+      verifiedPasskey = "";
+      passkeyInput.value = "";
+      passkeyInput.type = "password";
+      togglePwdBtn.textContent = "Show";
+      resetConfirmation();
+      document.getElementById("status1").style.display = "none";
+      document.getElementById("status2").style.display = "none";
+      document.getElementById("screen2").classList.add("hidden");
+      document.getElementById("screen1").classList.remove("hidden");
+      passkeyInput.focus();
     }
 
     function resetConfirmation() {
@@ -410,8 +387,8 @@
     }
 
     async function handleSubmitClick() {
-      if (!isUnlocked) {
-        showStatus("Please unlock the form with a valid passkey first.", "error");
+      if (!verifiedPasskey) {
+        goBackToScreen1();
         return;
       }
 
@@ -420,38 +397,39 @@
       const btn = document.getElementById("submitBtn");
       const cancelBtn = document.getElementById("cancelBtn");
       const confirmBox = document.getElementById("confirmBox");
-      const status = document.getElementById("status");
+      const status2 = document.getElementById("status2");
 
-      const key = passkeyInput.value.trim();
       const url = urlInput.value.trim();
       const email = emailInput.value.trim();
 
       if (!url || !email) {
-        showStatus("Please enter both the YouTube lecture link and your email address.", "error");
+        showStatus("status2", "Please enter both the YouTube lecture link and your email address.", "error");
         return;
       }
 
       if (!url.includes("youtu")) {
-        showStatus("Please enter a valid YouTube lecture link.", "error");
+        showStatus("status2", "Please enter a valid YouTube lecture link.", "error");
         return;
       }
 
+      // First click: Show "Are you sure?" confirmation box
       if (!isConfirming) {
         isConfirming = true;
-        status.style.display = "none";
+        status2.style.display = "none";
         document.getElementById("confirmEmail").textContent = email;
         document.getElementById("confirmUrl").textContent = url;
         confirmBox.style.display = "block";
         cancelBtn.style.display = "block";
-        btn.textContent = "Confirm & Submit";
+        btn.textContent = "Yes, Submit Details";
         btn.classList.add("confirm-mode");
         return;
       }
 
+      // Second click: Final submission
       btn.disabled = true;
       cancelBtn.disabled = true;
       btn.textContent = "Submitting...";
-      status.style.display = "none";
+      status2.style.display = "none";
 
       try {
         const response = await fetch(SCRIPT_URL, {
@@ -461,7 +439,7 @@
             "Content-Type": "text/plain;charset=utf-8"
           },
           body: JSON.stringify({
-            key: key,
+            key: verifiedPasskey,
             url: url,
             email: email
           })
@@ -471,17 +449,16 @@
         const result = JSON.parse(rawText);
 
         if (result.status === "success") {
-          showStatus("Got it! Your notes are being prepared and you'll receive the PDF in your mail in a bit.", "success");
+          showStatus("status2", "Got it! Your notes are being prepared and you'll receive the PDF in your mail in a bit.", "success");
           urlInput.value = "";
           emailInput.value = "";
           resetConfirmation();
         } else {
-          showStatus(result.message || "Submission rejected. Please check your passkey.", "error");
-          setLockState(false);
+          showStatus("status2", result.message || "Submission failed. Please try again.", "error");
           resetConfirmation();
         }
       } catch (err) {
-        showStatus("Could not reach the server. Please try again.", "error");
+        showStatus("status2", "Could not reach the server. Please check your connection and try again.", "error");
         resetConfirmation();
       } finally {
         btn.disabled = false;
@@ -492,9 +469,9 @@
       }
     }
 
-    function showStatus(msg, type) {
-      const status = document.getElementById("status");
-      status.className = type;
+    function showStatus(elementId, msg, type) {
+      const status = document.getElementById(elementId);
+      status.className = "status-box " + type;
       status.textContent = msg;
       status.style.display = "block";
     }
